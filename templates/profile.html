@@ -1,0 +1,163 @@
+{% include "header.html" %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/clean-blog.css') }}" >
+
+<style>
+
+  div.scrollmenu {
+  background-color: #333;
+  overflow: auto;
+  overflow-wrap: break-word;
+  white-space: nowrap;
+}
+
+div.scrollmenu div {
+  display: inline-block;
+  color: white;
+  text-align: center;
+  padding: 14px;
+  text-decoration: none;
+}
+
+div.scrollmenu div:hover {
+  background-color: #777;
+}
+
+.add_movie {
+  margin: auto;
+  width: 20%;
+  text-align: center;
+  border: 3px solid;
+  padding: 0px;
+}
+
+.add_movie:hover {
+  background-color: #777;
+}
+
+.add_movie a:hover {
+  color: black;
+  text-decoration: none;
+}
+
+
+</style>
+
+<section class="h-100 gradient-custom-2">
+  <div class="container py-5 h-100">
+    <div class="row d-flex justify-content-center align-items-center h-100">
+      <div class="col col-lg-9 col-xl-8">
+        <div class="card">
+          <div class="rounded-top text-white d-flex flex-row" style="background-color: #000; height:250px;">
+
+            <div>
+
+              <img src="{{ url_for('static', filename='img/'+ user.profile_image) }}"
+                alt="Generic placeholder image" class="img-fluid img-thumbnail mt-4 mb-2"
+                style=" width: 150px; height: 150px; object-fit: cover; z-index: 0; margin: 10px; border: solid; border-color: black;"> <br>
+              {% if current_user.is_authenticated %}
+                {% if profile %}
+                  <a href="{{ url_for('edit_profile') }}" class="btn btn-outline-dark"
+                    style="z-index: 1; margin-left: 10px; color: white;">
+                    Edit profile
+                  </a>
+                {% elif is_friend != True and is_request != True %}
+                    <a href="{{ url_for('add_friend', user_id=user.id) }}" class="btn btn-outline-dark"
+                    style="z-index: 1; margin-left: 10px; color: white;">
+                    Add Friend
+                  </a>
+                {% elif is_request and is_friend != True %}
+                    <a class="btn btn-outline-dark"
+                    style="z-index: 1; margin-left: 10px; color: white;">
+                    Friend Request Sent
+                  </a>
+                 {% elif is_friend %}
+                    <a href="{{ url_for('delete_friend', friend_id=user.id) }}" class="btn btn-outline-dark"
+                    style="z-index: 1; margin-left: 10px; color: white;">
+                    Delete Friend
+                  </a>
+                {% endif %}
+              {% else %}
+                  <a class="btn btn-outline-dark"
+                  style="z-index: 1; margin-left: 10px; color: white;">
+                  Log In To Add Friend
+                </a>
+              {% endif %}
+            </div>
+            <div class="ms-3" style="margin-top: 130px; margin-left: 15px;">
+              <h5>{{ user.name }}</h5>
+            </div>
+          </div>
+          <div class="p-4 text-black" style="background-color: #f8f9fa;">
+            <div class="">
+              <div>
+                <p class="small text-muted mb-0">Posts:</p>
+                <p >{{ user.posts | length }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 text-black" style="background-color: #f8f9fa;">
+            <div class="">
+              <div>
+                <p class="small text-muted mb-0">Friends:</p>
+                <p>{{ friends_num }}</p>
+                <a href="{{ url_for('view_all_friends', user_id=user.id) }}" class="btn btn-outline-dark">View all friends</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-body p-4 text-black">
+            <div class="mb-5">
+              <p class="lead fw-normal mb-1">About</p>
+              <p class="p-4" style="background-color: #f8f9fa;">
+                {{ user.about }}
+              </p>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <p class="lead fw-normal mb-0">Favourite Movies</p>
+            </div>
+
+              <div class="scrollmenu" style="margin-bottom: 15px" >
+                {% for movie in user.movies %}
+                <a href="{{ url_for('movie_info', title=movie.movie_title) }}"><div><img src="{{ movie.movie_img_url }}" width="80px" style="border-radius: 8px" >  <p>{{ movie.movie_title }}</p> </div></a>
+                {% endfor %}
+            </div>
+            {% if profile %}
+              <div class="add_movie">
+                <a href="{{ url_for('find_movie') }}" >Add Movie</a>
+              </div>
+            {% endif %}
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <p class="lead fw-normal mb-0">Posts</p>
+            </div>
+              {% for post in user.posts %}
+                <div class="post-preview">
+                  <a href="{{ url_for('show_post', index=post.id) }}">
+                    <h2 class="post-title">
+                      {{post.title}}
+                    </h2>
+                    <h3 class="post-subtitle">
+                      {{post.subtitle}}
+                    </h3>
+                  </a>
+                  <p class="post-meta">Posted by
+                    <a href="#">{{post.author.name}}</a>
+                      on {{post.date}}
+                    {% if user.name == current_user.name %}
+                    <a href="{{ url_for('delete', post_id=post.id) }}">✘</a>
+                    {% endif %}
+                  </p>
+                </div>
+              <hr>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% include "footer.html" %}

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-style.css') }}">
+
+</head>
+<body>
+
+<div class="sidebar">
+  <a href="{{ url_for('get_all_posts') }}">Home</a>
+  <a class="active" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+  <a class="" href="{{ url_for('admin_posts') }}">Posts</a>
+  <a href="{{ url_for('admin_users') }}">Users</a>
+  <a href="{{ url_for('admin_comments') }}">Comments</a>
+
+</div>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type="text/javascript">
+    google.charts.load("current", {packages:['corechart']});
+    google.charts.setOnLoadCallback(drawChart);
+    function drawChart() {
+      var data = google.visualization.arrayToDataTable([
+        ["category", "number", { role: "style" } ],
+        ["Users", {{ users | length }}, "#b87333"],
+        ["Posts", {{ posts | length }}, "silver"],
+        ["Comments", {{ comments | length }}, "gold"],
+      ]);
+
+      var view = new google.visualization.DataView(data);
+      view.setColumns([0, 1,
+                       { calc: "stringify",
+                         sourceColumn: 1,
+                         type: "string",
+                         role: "annotation" },
+                       2]);
+
+      var options = {
+        width: "60%",
+        height: 800,
+        bar: {groupWidth: "95%"},
+        legend: { position: "none" },
+      };
+      var chart = new google.visualization.ColumnChart(document.getElementById("columnchart_values"));
+      chart.draw(view, options);
+  }
+  </script>
+
+<div class="content">
+
+    <h1 style="padding: 50px 0px 0px 150px;">Blog data chart</h1>
+
+<div id="columnchart_values"></div>
+
+    </div>
+ </body>
+</html>

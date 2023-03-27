@@ -1,0 +1,102 @@
+{% extends 'bootstrap/base.html' %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+{% include "header.html" %}
+
+<link rel="stylesheet" href="{{url_for('static', filename='css/clean-blog.css')}}">
+<!-- Page Header -->
+<header class="masthead" style="background-image: url('{{post.img_url}}')">
+	<div class="overlay"></div>
+	<div class="container">
+		<div class="row">
+			<div class="col-lg-8 col-md-10 mx-auto">
+				<div class="post-heading">
+					<h1>{{post.title}}</h1>
+					<h2 class="subheading">{{post.subtitle}}</h2>
+					<span class="meta">Posted by
+              <a href="{{ url_for('users_profile', user_id=post.author.id) }}">{{post.author.name}}</a>
+              on {{post.date}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+
+  <!-- Post Content -->
+  <article>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+          <p>
+            {{ post.body | safe }}
+          </p>
+           <hr>
+            {% if current_user.name == post.author.name %}
+           <div class="clearfix">
+          <a class="btn btn-primary float-right" href="{{ url_for('edit_post', post_id=post.id) }}">Edit Post</a>
+        </div>
+            {% endif %}
+            {% if current_user.is_authenticated %}
+            {% if liked %}
+                <a href="{{ url_for('unlikePost', post_id=post.id) }}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="red" class="bi bi-heart-fill" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>
+                  </svg>
+                </a>
+            {% else %}
+                <a href="{{ url_for('likePost', post_id=post.id) }}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-heart" viewBox="0 0 16 16">
+                    <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z"/>
+                  </svg>
+                </a>
+            {% endif %}
+            {% endif %}
+            <p>Likes: {{ post.likes }}</p>
+<!--           Comments Area -->
+        {% if current_user.is_authenticated %}
+                {{ wtf.quick_form(form) }}
+        {% else %}
+           <p><a href="{{ url_for('login') }}">Log in</a> to add comments</p>
+        {% endif %}
+          <div class="col-lg-8 col-md-10 mx-auto comment">
+          {% for comment in comments %}
+              <ul class="commentList">
+                    <div class="commenterImage" style="float: left; padding-right: 10px;">
+                      <img src="{{ url_for('static', filename='img/' + comment.comment_author.profile_image ) }}" width="50px" height="50px" style="border-radius: 50%;  object-fit: cover;" />
+                    </div>
+                  {% if comment.author_id == current_user.id %}
+                  <div class="menu-nav">
+                    <div class="menu-item"></div>
+                    <div class="dropdown-container" tabindex="-1">
+                      <div class="three-dots"></div>
+                      <div class="dropdown">
+                        <a href="{{url_for('delete_comment', post_id=post.id, comment_id=comment.id)}}"><div>Delete</div></a>
+                        <a href="{{ url_for('show_post', index=post.id, edit=comment.id) }}" ><div>Edit</div></a>
+                      </div>
+                    </div>
+                  </div>
+                  {% endif %}
+                    <div class="commentText" style="padding-left: 50px;">
+                        {% if edit_comment and comment.id == edit_comment_id %}
+                         {{ wtf.quick_form(edit_form) }}
+                        {% else %}
+                            <p>{{ comment.text | safe }}</p>
+                        {% endif %}
+                      <p class="date sub-text" style="color: #B4B4B4; font-size: 15px">{{ comment.comment_author.name }}</p>
+                    </div>
+              </ul>
+          {% endfor %}
+            </div>
+
+
+          </div>
+      </div>
+    </div>
+  </article>
+
+  <hr>
+{% include "footer.html" %}
+{% endblock %}

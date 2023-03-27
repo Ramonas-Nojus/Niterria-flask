@@ -1,0 +1,59 @@
+{% extends 'bootstrap/base.html' %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+{% include "header.html" %}
+
+        <style>
+            input[type="file"] {
+                position: relative;
+                font-family: calibri;
+                width: 350px;
+                padding: 10px;
+                background: linear-gradient(40deg, #ff6ec4, #7873f5);
+                -webkit-border-radius: 5px;
+                -moz-border-radius: 5px;
+                border: 2px solid #BBB;
+                text-align: center;
+                background-color: #DDD;
+                cursor: pointer;
+                overflow:hidden;
+
+            }
+	    </style>
+
+  <!-- Page Header -->
+
+  <header class="masthead" style="background: linear-gradient(40deg, #ff6ec4, #7873f5);">
+	<div class="overlay"></div>
+      <div class="container">
+	    <div class="row">
+		  <div class="col-lg-8 col-md-10 mx-auto">
+			<div class="site-heading">
+                <h1 >Edit Profile</h1>
+            </div>
+          </div>
+        </div>
+      </div>
+  </header>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-md-10 mx-auto">
+
+          <!-- This is where the form will go -->
+            <img src="{{ url_for('static', filename='img/' + current_user.profile_image ) }}" style="height:200px; width:200px; object-fit: cover; border: solid; ">
+            <br>
+            <a href="{{ url_for('delete_image') }}" style="margin-top: 10px;" class="btn btn-outline-danger">Delete Image</a>
+
+          {{ wtf.quick_form(form ) }}
+
+
+      </div>
+    </div>
+  </div>
+
+
+{% include "footer.html" %}
+{% endblock %}

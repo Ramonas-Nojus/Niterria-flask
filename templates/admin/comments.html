@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-style.css') }}">
+<title>Admin comments</title>
+<link href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+
+
+</head>
+<body>
+
+<div class="sidebar">
+  <a href="{{ url_for('get_all_posts') }}">Home</a>
+  <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+  <a class="" href="{{ url_for('admin_posts') }}">Posts</a>
+  <a href="{{ url_for('admin_users') }}">Users</a>
+  <a class="active" href="{{ url_for('admin_comments') }}">Comments</a>
+
+</div>
+
+
+<div class="content">
+
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th scope="col">Id</th>
+      <th scope="col">Author</th>
+      <th scope="col">Comment</th>
+      <th scope="col">In response to</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for comment in comments %}
+    <tr>
+      <th scope="row">{{ comment.id }}</th>
+      <td>{{ comment.comment_author.name }}</td>
+      <td>{{ comment.text | safe }}</td>
+      <td><a href='{{ url_for("show_post", index=comment.post_id ) }}' >{{ comment.parent_post.title }}</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+</div>
+
+
+</body>
+</html>

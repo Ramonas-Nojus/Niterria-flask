@@ -1,0 +1,10 @@
+poetry.lock
+pyproject.toml
+requirements.txt
+venv library root/
+__pycache__/
+APIs.py
+.idea/
+blog.db
+.idea/workspace.xml
+.env

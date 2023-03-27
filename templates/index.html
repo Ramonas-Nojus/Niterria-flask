@@ -1,0 +1,105 @@
+{% include "header.html" %}
+<style>
+  .search-bar {
+      width: 250px;
+      margin-left: auto;
+      margin-right: 0;
+      padding-right: 20px;
+  }
+</style>
+
+
+  <!-- Page Header -->
+  <header class="masthead" style="background-image: url('https://i.ytimg.com/vi/dqhVmYn4HF0/maxresdefault.jpg')">
+    <div class="overlay"></div>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+          <div class="site-heading">
+            <h1>FakeBook</h1>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+<form method="get" action="{{ url_for('search') }}">
+  <div class="input-group rounded search-bar">
+    <input type="search" class="form-control rounded" placeholder="Search" aria-label="Search" aria-describedby="search-addon" name="search">
+      <button class="input-group-text border-0" id="search-addon">
+        <i class="fas fa-search"></i>
+      </button>
+  </div>
+</form>
+
+
+{% if search %}
+  {% if search_results | length > 0 %}
+    <h2>Search results for "{{ key_word }}"</h2>
+  {% else %}
+    <h2>No results for "{{ key_word }}"</h2>
+  {% endif %}
+{% else %}
+  {% if all_posts | length > 0 %}
+    {% set search_results = all_posts %}
+  {% else %}
+    <div style="padding: 10px 0 0 25px;">
+      <h2>No Posts</h2>
+    </div>
+  {% endif %}
+{% endif %}
+
+  <!-- Main Content -->
+<div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-md-10 mx-auto">
+        {% for post in search_results %}
+          <div class="post-preview">
+            <a href="{{ url_for('show_post', index=post.id) }}">
+              <h2 class="post-title">
+                {{post.title}}
+              </h2>
+              <h3 class="post-subtitle">
+                {{post.subtitle}}
+              </h3>
+            </a>
+            <p class="post-meta">Posted by
+              <a href="{{ url_for('users_profile', user_id=post.author.id) }}">{{post.author.name}}</a>
+                on {{post.date}}
+                {% if current_user.name == post.author.name %}
+                  <a href="{{ url_for('delete', post_id=post.id) }}">✘</a>
+                {% endif %}
+            </p>
+          </div>
+        <hr>
+        {% endfor %}
+      </div>
+    </div>
+</div>
+
+
+
+{% if type == 'profiles' %}
+  {% for user in search_results %}
+    <div class="container">
+      <div class="col-5" style="padding: 10px; width: 500; height: 235px;">
+        <a><img width="150px" height="150px" style="border: 3px solid black; float: left;  border-radius: 50%;  object-fit: cover;" src="{{ url_for('static', filename='img/' + user.profile_image) }}"></a>
+        <a href="{{ url_for('users_profile', user_id=user.id) }}"><h2> {{ user.name }} </h2></a>
+      </div>
+    </div>
+  {% endfor %}
+{% endif %}
+
+
+        <!-- New Post -->
+        {% if current_user.is_authenticated %}
+        <div class="clearfix"  style="padding: 10px;">
+          <a class="btn btn-primary float-right" href="{{ url_for('new_post') }}">Create New Post</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <hr>
+
+{% include "footer.html" %}
