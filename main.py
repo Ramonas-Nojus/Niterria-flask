@@ -3,10 +3,10 @@ from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 from flask_ckeditor import CKEditor
 import datetime
-from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm, EditProfileForm, AddMovieForm, EditCommentForm
+from werkzeug.utils import secure_filename
+from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm, EditCommentForm
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 from functools import wraps
 import os
 
@@ -39,9 +39,8 @@ class BlogPost(db.Model):
     subtitle = db.Column(db.String(250), nullable=False)
     date = db.Column(db.String(250), nullable=False)
     body = db.Column(db.Text, nullable=False)
-    author_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    author = db.relationship("User", back_populates="posts")
     comments = db.relationship("Comments", back_populates="parent_post")
+    image = db.Column(db.String(250), nullable=False)
     likes = db.Column(db.Integer)
 
     def __repr__(self):
@@ -55,9 +54,9 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(100), unique=True)
     password = db.Column(db.String(100))
     name = db.Column(db.String(1000))
-    posts = db.relationship("BlogPost", back_populates="author")
     liked_posts = db.relationship("PostLikes", back_populates="user")
     comments = db.relationship("Comments", back_populates="comment_author")
+    role = db.Column(db.String(100))
     profile_image = db.Column(db.String(100))
 
     def __repr__(self):
@@ -159,30 +158,31 @@ def show_post(index):
                            edit_comment=edit_comment, edit_comment_id=comment_to_edit_id)
 
 
-@app.route('/new-post', methods=['GET', 'POST'])
+@app.route('/admin/add_post', methods=['GET', 'POST'])
 @login_required
 def new_post():
     form = CreatePostForm()
     if form.validate_on_submit():
         title = form.title.data
         subtitle = form.subtitle.data
-        author_id = current_user.id
         content = form.content.data
         day = datetime.datetime.now().day
         month = datetime.datetime.now().strftime("%B")
         year = datetime.datetime.now().year
         date = f"{month} {day}, {year}"
+        file = secure_filename(form.image.data.filename)
+        form.image.data.save('static/img/' + file)
         post = BlogPost(title=title,
                         subtitle=subtitle,
                         body=content,
                         date=date,
-                        author_id=author_id,
-                        likes=0)
+                        likes=0,
+                        image=file)
         db.session.add(post)
         db.session.commit()
         return redirect(url_for('get_all_posts'))
 
-    return render_template("make-post.html", form=form)
+    return render_template("admin/add_post.html", form=form)
 
 
 @app.route("/post/like/<int:post_id>", methods=['GET'])
@@ -271,6 +271,7 @@ def register():
         new_user = User(name=form.name.data,
                         email=form.email.data,
                         password=hashed_password,
+                        role="subscriber",
                         profile_image='user-icon.jpg')
         db.session.add(new_user)
         db.session.commit()
@@ -307,31 +308,18 @@ def logout():
 # ===========Profile====================
 
 
-@app.route('/profile')
+@app.route('/profile', methods=['GET'])
 @login_required
 def profile():
-    return render_template('profile.html', user=current_user, profile=True)
+    is_edit = request.args.get('is_edit')
+
+    return render_template('profile.html', edit=is_edit)
 
 
-@app.route('/edit-profile', methods=['GET', 'POST'])
+@app.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
-    form = EditProfileForm(email=current_user.email,
-                           name=current_user.name,
-                           about=current_user.about)
-    if request.method == 'POST':
-        if form.image.data:
-            file = secure_filename(form.image.data.filename)
-            form.image.data.save('static/img/' + file)
-            current_user.profile_image = file
-
-        current_user.name = form.name.data
-        current_user.email = form.email.data
-        current_user.about = form.about.data
-        db.session.commit()
-        return redirect(url_for('profile'))
-
-    return render_template('edit_profile.html', form=form)
+    return render_template('profile.html', edit=True)
 
 
 @app.route('/delete-image')

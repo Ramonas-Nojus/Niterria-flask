@@ -39,3 +39,10 @@
   }
 
 })(jQuery); // End of use strict
+
+imgInp.onchange = evt => {
+  const [file] = imgInp.files
+  if (file) {
+    profile_img.src = URL.createObjectURL(file)
+  }
+};

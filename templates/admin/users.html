@@ -26,6 +26,8 @@
   <a href="{{ url_for('admin_posts') }}">Posts</a>
   <a class="active" href="{{ url_for('admin_users') }}">Users</a>
   <a href="{{ url_for('admin_comments') }}">Comments</a>
+  <a>Add Post</a>
+
 
 </div>
 
@@ -38,8 +40,9 @@
       <th scope="col">Id</th>
       <th scope="col">Name</th>
       <th scope="col">Email</th>
-      <th scope="col">About</th>
+      <th scope="col">role</th>
       <th scope="col">Profile_image</th>
+
 
     </tr>
   </thead>
@@ -49,7 +52,7 @@
       <th scope="row">{{ user.id }}</th>
       <td>{{ user.name }}</td>
       <td>{{ user.email }}</td>
-      <td>{{ user.about }}</td>
+      <td>{{ user.role }}</td>
       <td><img class="image" src="{{  url_for('static', filename='img/'+user.profile_image) }}" style="width: 100px;"></td>
     </tr>
   {% endfor %}

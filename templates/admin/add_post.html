@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+
+{% import "bootstrap/wtf.html" as wtf %}
+
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,35 +20,13 @@
   <a href="{{ url_for('admin_comments') }}">Comments</a>
   <a>Add Post</a>
 
-
 </div>
 
 <div class="content">
+  {{ wtf.quick_form(form) }}
 
-
-<table class="table table-striped">
-  <thead>
-    <tr>
-      <th scope="col">Id</th>
-      <th scope="col">Title</th>
-      <th scope="col">Date</th>
-      <th scope="col">Body</th>
-      <th scope="col">Author</th>
-    </tr>
-  </thead>
-  <tbody>
-  {% for post in posts %}
-    <tr>
-      <th scope="row">{{ post.id }}</th>
-      <td>{{ post.title }}</td>
-      <td>{{ post.date }}</td>
-      <td>{{ post.body | safe | truncate(150, True, '...') }} <a href="{{ url_for('show_post', index=post.id) }}">Read more</a></td>
-      <td>{{ post.author.name }}</td>
-    </tr>
-  {% endfor %}
-  </tbody>
-</table>
-
+  {{ ckeditor.load() }}
+  {{ ckeditor.config(name='content', height=500) }}
 </div>
 
 

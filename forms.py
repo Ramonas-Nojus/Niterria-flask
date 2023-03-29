@@ -12,7 +12,7 @@ app = Flask(__name__)
 class CreatePostForm(FlaskForm):
     title = StringField("Blog Post Title", validators=[DataRequired()])
     subtitle = StringField("Subtitle", validators=[DataRequired()])
-    img_url = StringField("Blog Image URL", validators=[DataRequired(), URL()])
+    image = FileField("Blog Image", validators=[FileAllowed(['jpg', 'jpeg', 'png', 'webp'], "Image only!")])
     content = CKEditorField("Blog Content", validators=[DataRequired()])
     submit = SubmitField("Submit Post")
 
@@ -42,9 +42,7 @@ class EditCommentForm(FlaskForm):
 
 class EditProfileForm(FlaskForm):
     image = FileField("Profile Image", validators=[FileAllowed(['jpg', 'png'], "Images only!")])
-    email = StringField("Email", validators=[DataRequired()])
     name = StringField('Name', validators=[DataRequired()])
-    about = StringField("About", validators=[DataRequired()])
     submit = SubmitField("Edit Profile")
 
 

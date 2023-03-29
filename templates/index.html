@@ -9,20 +9,6 @@
 </style>
 
 
-  <!-- Page Header -->
-  <header class="masthead" style="background-image: url('https://i.ytimg.com/vi/dqhVmYn4HF0/maxresdefault.jpg')">
-    <div class="overlay"></div>
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-8 col-md-10 mx-auto">
-          <div class="site-heading">
-            <h1>FakeBook</h1>
-          </div>
-        </div>
-      </div>
-    </div>
-  </header>
-
 <form method="get" action="{{ url_for('search') }}">
   <div class="input-group rounded search-bar">
     <input type="search" class="form-control rounded" placeholder="Search" aria-label="Search" aria-describedby="search-addon" name="search">
@@ -50,53 +36,27 @@
 {% endif %}
 
   <!-- Main Content -->
-<div class="container">
-    <div class="row">
-      <div class="col-lg-8 col-md-10 mx-auto">
-        {% for post in search_results %}
-          <div class="post-preview">
-            <a href="{{ url_for('show_post', index=post.id) }}">
-              <h2 class="post-title">
-                {{post.title}}
-              </h2>
-              <h3 class="post-subtitle">
-                {{post.subtitle}}
-              </h3>
-            </a>
-            <p class="post-meta">Posted by
-              <a href="{{ url_for('users_profile', user_id=post.author.id) }}">{{post.author.name}}</a>
-                on {{post.date}}
-                {% if current_user.name == post.author.name %}
-                  <a href="{{ url_for('delete', post_id=post.id) }}">✘</a>
-                {% endif %}
-            </p>
+        <div class="container">
+          <div class="row">
+            <div class="col-lg-8 col-md-10 mx-auto">
+              {% for post in search_results %}
+                <div class="post-preview">
+                  <a href="{{ url_for('show_post', index=post.id) }}">
+                    <h2 class="post-title">
+                      {{post.title}}
+                    </h2>
+                    <img src="{{ url_for('static', filename='img/' + post.image) }}" style="width:100%; border: 4px solid; border-radius: 3px;">
+                    <h3 class="post-subtitle">
+                      {{post.subtitle}}
+                    </h3>
+                  </a>
+                  <p class="post-meta">Posted {{post.date}}</p>
+                </div>
+              <hr>
+              {% endfor %}
+            </div>
           </div>
-        <hr>
-        {% endfor %}
-      </div>
-    </div>
-</div>
-
-
-
-{% if type == 'profiles' %}
-  {% for user in search_results %}
-    <div class="container">
-      <div class="col-5" style="padding: 10px; width: 500; height: 235px;">
-        <a><img width="150px" height="150px" style="border: 3px solid black; float: left;  border-radius: 50%;  object-fit: cover;" src="{{ url_for('static', filename='img/' + user.profile_image) }}"></a>
-        <a href="{{ url_for('users_profile', user_id=user.id) }}"><h2> {{ user.name }} </h2></a>
-      </div>
-    </div>
-  {% endfor %}
-{% endif %}
-
-
-        <!-- New Post -->
-        {% if current_user.is_authenticated %}
-        <div class="clearfix"  style="padding: 10px;">
-          <a class="btn btn-primary float-right" href="{{ url_for('new_post') }}">Create New Post</a>
         </div>
-        {% endif %}
       </div>
     </div>
   </div>
