@@ -4,10 +4,29 @@
  * Licensed under MIT (https://github.com/StartBootstrap/startbootstrap-clean-blog/blob/master/LICENSE)
  */
 
+.column1 {
+  float: left;
+  width: 70%;
+}
+
+.column2 {
+  float: left;
+  width: 30%;
+}
+
+/* Clear floats after the columns */
+.row {
+  content: "";
+  display: block;
+  clear: both;
+    margin: 0;
+}
+
 .image-upload>input {
   display: none;
 }
 body {
+  margin: 0;
   font-size: 20px;
   color: #212529;
   font-family: 'Lora', 'Times New Roman', serif;

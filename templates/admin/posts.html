@@ -16,7 +16,7 @@
   <a class="active" href="{{ url_for('admin_posts') }}">Posts</a>
   <a href="{{ url_for('admin_users') }}">Users</a>
   <a href="{{ url_for('admin_comments') }}">Comments</a>
-  <a>Add Post</a>
+  <a href="{{ url_for('new_post') }}">Add Post</a>
 
 
 </div>
@@ -31,7 +31,9 @@
       <th scope="col">Title</th>
       <th scope="col">Date</th>
       <th scope="col">Body</th>
-      <th scope="col">Author</th>
+      <th scope="col">Views</th>
+      <th scope="col">Image</th>
+      <th></th>
     </tr>
   </thead>
   <tbody>
@@ -40,8 +42,11 @@
       <th scope="row">{{ post.id }}</th>
       <td>{{ post.title }}</td>
       <td>{{ post.date }}</td>
-      <td>{{ post.body | safe | truncate(150, True, '...') }} <a href="{{ url_for('show_post', index=post.id) }}">Read more</a></td>
-      <td>{{ post.author.name }}</td>
+      <td>{{ post.body | safe | truncate(125, True, '...') }} <a href="{{ url_for('show_post', index=post.id) }}">Read more</a></td>
+      <td></td>
+      <td><img src="{{ url_for('static', filename='img/'+post.image) }}" style="width: 100px;"></td>
+      <td><a href="{{ url_for('edit_post', post_id=post.id) }}">Edit</a></td>
+
     </tr>
   {% endfor %}
   </tbody>

@@ -24,17 +24,31 @@
            <hr>
             {% if current_user.is_authenticated %}
             {% if liked %}
-                <a href="{{ url_for('unlikePost', post_id=post.id) }}">
+                <a href="{{ url_for('unlike_post', post_id=post.id) }}">
                   <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="red" class="bi bi-heart-fill" viewBox="0 0 16 16">
                     <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>
                   </svg>
                 </a>
             {% else %}
-                <a href="{{ url_for('likePost', post_id=post.id) }}">
+                <a href="{{ url_for('like_post', post_id=post.id) }}">
                   <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-heart" viewBox="0 0 16 16">
                     <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z"/>
                   </svg>
                 </a>
+
+            {% endif %}
+            {% if saved %}
+            <a href="{{ url_for('unsave_post', post_id=post.id) }}" style="float: right">
+                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="green" class="bi bi-save2-fill" viewBox="0 0 16 16">
+                  <path d="M8.5 1.5A1.5 1.5 0 0 1 10 0h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h6c-.314.418-.5.937-.5 1.5v6h-2a.5.5 0 0 0-.354.854l2.5 2.5a.5.5 0 0 0 .708 0l2.5-2.5A.5.5 0 0 0 10.5 7.5h-2v-6z"/>
+                </svg>
+            </a>
+            {% else %}
+            <a href="{{ url_for('save_post', post_id=post.id) }}" style="float: right">
+                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-save2" viewBox="0 0 16 16">
+                  <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v4.5h2a.5.5 0 0 1 .354.854l-2.5 2.5a.5.5 0 0 1-.708 0l-2.5-2.5A.5.5 0 0 1 5.5 6.5h2V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1H2z"/>
+                </svg>
+            </a>
             {% endif %}
             {% endif %}
             <p>Likes: {{ post.likes }}</p>
@@ -44,7 +58,7 @@
         {% else %}
            <p><a href="{{ url_for('login') }}">Log in</a> to add comments</p>
         {% endif %}
-          <div class="col-lg-8 col-md-10 mx-auto comment">
+          <div class="">
           {% for comment in comments %}
               <ul class="commentList">
                     <div class="commenterImage" style="float: left; padding-right: 10px;">
@@ -80,6 +94,21 @@
     </div>
   </article>
 
-  <hr>
+<hr>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function (event) {
+        var scrollpos = sessionStorage.getItem('scrollpos');
+        if (scrollpos) {
+            window.scrollTo(0, scrollpos);
+            sessionStorage.removeItem('scrollpos');
+        }
+    });
+
+    window.addEventListener("beforeunload", function (e) {
+        sessionStorage.setItem('scrollpos', window.scrollY);
+    });
+</script>
+
 {% include "footer.html" %}
 {% endblock %}

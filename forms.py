@@ -41,8 +41,8 @@ class EditCommentForm(FlaskForm):
 
 
 class EditProfileForm(FlaskForm):
-    image = FileField("Profile Image", validators=[FileAllowed(['jpg', 'png'], "Images only!")])
     name = StringField('Name', validators=[DataRequired()])
+    image = FileField("Profile Image", validators=[FileAllowed(['jpg', 'jpeg', 'png', 'webp'], "Image only!")])
     submit = SubmitField("Edit Profile")
 
 

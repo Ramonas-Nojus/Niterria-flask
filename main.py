@@ -4,12 +4,11 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_ckeditor import CKEditor
 import datetime
 from werkzeug.utils import secure_filename
-from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm, EditCommentForm
+from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm, EditCommentForm, EditProfileForm
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 import os
-
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
@@ -19,7 +18,6 @@ ckeditor = CKEditor(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -42,6 +40,8 @@ class BlogPost(db.Model):
     comments = db.relationship("Comments", back_populates="parent_post")
     image = db.Column(db.String(250), nullable=False)
     likes = db.Column(db.Integer)
+    saves = db.relationship("SavedPosts", back_populates="saved_post")
+    views = db.Column(db.Integer)
 
     def __repr__(self):
         return f'<Post "{self.title}">'
@@ -56,6 +56,7 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(1000))
     liked_posts = db.relationship("PostLikes", back_populates="user")
     comments = db.relationship("Comments", back_populates="comment_author")
+    saved_posts = db.relationship("SavedPosts", back_populates='user')
     role = db.Column(db.String(100))
     profile_image = db.Column(db.String(100))
 
@@ -82,12 +83,23 @@ class PostLikes(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     liked_post = db.Column(db.Integer, nullable=False)
-    user = db.relationship("User",  back_populates="liked_posts")
+    user = db.relationship("User", back_populates="liked_posts")
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+
+
+class SavedPosts(db.Model):
+    __tablename__ = "saved_posts"
+
+    id = db.Column(db.Integer, primary_key=True)
+    saved_post = db.relationship('BlogPost', back_populates='saves')
+    post_id = db.Column(db.Integer, db.ForeignKey("blog_posts.id"), nullable=False)
+    user = db.relationship("User", back_populates="saved_posts")
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
 
 
 with app.app_context():
     db.create_all()
+
 
 # ===================================================================
 
@@ -99,6 +111,7 @@ def is_admin(func):
             return func(*args, **kwargs)
         else:
             return redirect(url_for('get_all_posts'))
+
     return decorator
 
 
@@ -107,17 +120,14 @@ def about():
     return render_template("about.html")
 
 
-@app.route("/contact")
-def contact():
-    return render_template("contact.html")
-
 # ===========Posts====================
 
 
 @app.route('/')
 def get_all_posts():
     posts = BlogPost.query.order_by(BlogPost.id.desc()).all()
-    return render_template("index.html", all_posts=posts)
+    popular_post = BlogPost.query.order_by(BlogPost.views.desc()).all()
+    return render_template("index.html", all_posts=posts, popular_post=popular_post)
 
 
 @app.route("/post/<int:index>", methods=['GET', 'POST'])
@@ -126,12 +136,16 @@ def show_post(index):
     edit_form = EditCommentForm()
     comment_to_edit_id = 0
     post = BlogPost.query.get(index)
+    post.views = int(post.views) + 1
     is_liked = False
+    saved = False
     edit_comment = False
 
     if current_user.is_authenticated:
         if len(PostLikes.query.filter_by(liked_post=index, user_id=current_user.id).all()) > 0:
             is_liked = True
+        if len(SavedPosts.query.filter_by(post_id=index, user_id=current_user.id).all()) > 0:
+            saved = True
 
     if request.args.get("edit"):
         comment_to_edit_id = int(request.args.get("edit"))
@@ -152,10 +166,11 @@ def show_post(index):
         db.session.add(new_comment)
         db.session.commit()
         form.text.data = ''
+        return redirect(url_for('show_post', index=index))
 
     comments = Comments.query.filter_by(post_id=index).all()
     return render_template("post.html", post=post, form=form, comments=comments, edit_form=edit_form, liked=is_liked,
-                           edit_comment=edit_comment, edit_comment_id=comment_to_edit_id)
+                           edit_comment=edit_comment, edit_comment_id=comment_to_edit_id, saved=saved)
 
 
 @app.route('/admin/add_post', methods=['GET', 'POST'])
@@ -177,7 +192,8 @@ def new_post():
                         body=content,
                         date=date,
                         likes=0,
-                        image=file)
+                        image=file,
+                        views=0)
         db.session.add(post)
         db.session.commit()
         return redirect(url_for('get_all_posts'))
@@ -187,7 +203,7 @@ def new_post():
 
 @app.route("/post/like/<int:post_id>", methods=['GET'])
 @login_required
-def likePost(post_id):
+def like_post(post_id):
     post = BlogPost.query.get(post_id)
     post.likes += 1
 
@@ -201,7 +217,7 @@ def likePost(post_id):
 
 @app.route("/post/unlike/<int:post_id>", methods=['GET'])
 @login_required
-def unlikePost(post_id):
+def unlike_post(post_id):
     post = BlogPost.query.get(post_id)
     post.likes -= 1
 
@@ -213,24 +229,50 @@ def unlikePost(post_id):
     return redirect(url_for('show_post', index=post_id))
 
 
-@app.route('/edit-post/<post_id>', methods=['GET', 'POST'])
+@app.route('/post/save/<int:post_id>', methods=['GET'])
+@login_required
+def save_post(post_id):
+    save = SavedPosts(post_id=post_id,
+                      user_id=current_user.id)
+    db.session.add(save)
+    db.session.commit()
+
+    return redirect(url_for('show_post', index=post_id))
+
+
+@app.route('/post/unsave/<int:post_id>')
+@login_required
+def unsave_post(post_id):
+    save = SavedPosts.query.filter_by(post_id=post_id,
+                                      user_id=current_user.id).first()
+    db.session.delete(save)
+    db.session.commit()
+
+    return redirect(url_for('show_post', index=post_id))
+
+
+@app.route('/admin/edit-post/<post_id>', methods=['GET', 'POST'])
 @login_required
 def edit_post(post_id):
     post = BlogPost.query.get(post_id)
     form = CreatePostForm(title=post.title,
                           subtitle=post.subtitle,
-                          author=post.author,
+                          image=post.image,
                           content=post.body)
 
     if form.validate_on_submit():
         post.title = form.title.data
         post.subtitle = form.subtitle.data
         post.body = form.content.data
+        if form.image.data:
+            file = secure_filename(form.image.data.filename)
+            form.image.data.save('static/img/' + file)
+            post.image = file
 
         db.session.commit()
         return redirect(url_for('show_post', index=post_id))
 
-    return render_template("make-post.html", form=form, post_id=post_id)
+    return render_template("admin/add_post.html", form=form, post_id=post_id)
 
 
 @app.route("/delete/<post_id>")
@@ -252,6 +294,7 @@ def delete_comment(comment_id, post_id):
     db.session.delete(comment)
     db.session.commit()
     return redirect(url_for('show_post', index=post_id))
+
 
 # ===========Authentication====================
 
@@ -308,12 +351,21 @@ def logout():
 # ===========Profile====================
 
 
-@app.route('/profile', methods=['GET'])
+@app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
+    saved_posts = SavedPosts.query.filter_by(user_id=current_user.id).all()
     is_edit = request.args.get('is_edit')
+    form = EditProfileForm(name=current_user.name)
+    if request.method == 'POST':
+        if form.image.data:
+            file = secure_filename(form.image.data.filename)
+            form.image.data.save('static/img/' + file)
+            current_user.profile_image = file
+        current_user.name = form.name.data
+        db.session.commit()
 
-    return render_template('profile.html', edit=is_edit)
+    return render_template('profile.html', edit=is_edit, form=form, saved_posts=saved_posts)
 
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
@@ -374,6 +426,7 @@ def admin_users():
 def admin_comments():
     all_comments = Comments.query.all()
     return render_template('admin/comments.html', comments=all_comments)
+
 
 # ==============================
 
