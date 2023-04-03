@@ -6,20 +6,71 @@
 
 .column1 {
   float: left;
-  width: 70%;
+  width: 60%;
+}
+
+.post {
+    float: left;
+    margin-left: 0px;
+    width: 100%;
+}
+
+.ad {
+    width:100%;
+    align-items: center;
+    justify-content: center;
+}
+
+
+
+.post-ad {
+    position: absolute;
+    float: left;
+    width: 20%;
 }
 
 .column2 {
   float: left;
-  width: 30%;
+  width: 20%;
+}
+
+.column3 {
+    float: left;
+    width: 20%;
 }
 
 /* Clear floats after the columns */
 .row {
+  width: 100%;
   content: "";
   display: block;
   clear: both;
-    margin: 0;
+  margin: 0;
+}
+
+@media (max-width: 1260px){
+    .row {
+      width: 100%;
+      content: "";
+        position: relative;
+      clear: both;
+      margin: 0;
+    }
+    .column1 {
+      float: left;
+      width: 100%;
+    }
+
+    .column2 {
+      float: left;
+      padding-left: 20px;
+      width: 100%;
+    }
+
+    .column3 {
+        float: left;
+        width: 100%;
+    }
 }
 
 .image-upload>input {
@@ -118,7 +169,7 @@ img::-moz-selection {
 
 #mainNav .navbar-brand {
   font-weight: 800;
-  color: #343a40;
+  color: white;
 }
 
 #mainNav .navbar-toggler {
@@ -126,7 +177,7 @@ img::-moz-selection {
   font-weight: 800;
   padding: 13px;
   text-transform: uppercase;
-  color: #343a40;
+  color: white;
 }
 
 #mainNav .navbar-nav > li.nav-item > a {
@@ -134,6 +185,7 @@ img::-moz-selection {
   font-weight: 800;
   letter-spacing: 1px;
   text-transform: uppercase;
+  color: white;
 }
 
 @media only screen and (min-width: 992px) {
@@ -173,13 +225,13 @@ img::-moz-selection {
     background-color: rgba(255, 255, 255, 0.9);
   }
   #mainNav.is-fixed .navbar-brand {
-    color: #212529;
+    color: white;
   }
   #mainNav.is-fixed .navbar-brand:focus, #mainNav.is-fixed .navbar-brand:hover {
     color: #0085A1;
   }
   #mainNav.is-fixed .navbar-nav > li.nav-item > a {
-    color: #212529;
+    color: white;
   }
   #mainNav.is-fixed .navbar-nav > li.nav-item > a:focus, #mainNav.is-fixed .navbar-nav > li.nav-item > a:hover {
     color: #0085A1;
@@ -191,8 +243,8 @@ img::-moz-selection {
 }
 
 header.masthead {
-  background-color: #03C0C1;
-  height: 75px;
+  background-color: #00BDA5;
+  height: 65px;
   margin-bottom: 50px;
   position: relative;
   background-size: cover;

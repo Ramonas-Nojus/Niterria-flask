@@ -4,13 +4,35 @@
       width: 250px;
       padding-right: 20px;
   }
+
+  .pager li .active_link {
+
+    background: #000 !important;
+
+    }
+
 </style>
 
-
+<div>
 <div class="row">
 
 
-    <div class="column1">
+      <div class="column3" >
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7440179235836916"
+           crossorigin="anonymous"></script>
+      <!-- blog-ad -->
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-7440179235836916"
+           data-ad-slot="8404055238"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>
+           (adsbygoogle = window.adsbygoogle || []).push({});
+      </script>
+
+</div>
+      <div class="column1">
 
 {% if search %}
   {% if search_results | length > 0 %}
@@ -29,10 +51,11 @@
 {% endif %}
 
   <!-- Main Content -->
-        <div class="container">
-          <div class="row">
+<div class="container" >
+  <div class="row" >
+      <div class="post">
           {% for post in search_results %}
-            <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="col-lg-8 col-md-10 ">
                 <div class="post-preview">
                   <a href="{{ url_for('show_post', index=post.id) }}">
                     <h2 class="post-title">
@@ -45,9 +68,27 @@
                   </a>
                   <p class="post-meta">Posted {{post.date}}</p>
                 </div>
-              <hr>
             </div>
+          <hr style="width: 70%">
             {% endfor %}
+          <nav aria-label="Page navigation example" style="display: table; margin: 0 auto;  margin-top: auto;" >
+              <ul class="pagination ">
+                {% for i in range(1, count+1) %}
+                  {%  if i == page: %}
+                        <li class="page-item active"><a class='page-link'>{{i}}</a></li>
+                  {% else %}
+                      {% if search %}
+                            <li class="page-item"><a class='page-link' href="{{ url_for('search', search=key_word, page=i) }}">{{i}}</a></li>
+                          {% else %}
+                        <li class="page-item"><a class="page-link" href="{{ url_for('get_all_posts', page=i ) }}">{{ i }}</a></li>
+                      {% endif %}
+                  {% endif %}
+                {% endfor %}
+              </ul>
+          </nav>
+
+          <hr>
+          </div>
           </div>
         </div>
       </div>
@@ -63,7 +104,6 @@
     </form>
     <p></p>
     <h3 style="text-decoration: underline;">Popular Posts:</h3>
-    <div class="row">
     {% for post in popular_post %}
       <div style="width: 80%;">
           <div class="post-preview">
@@ -82,21 +122,18 @@
       </div>
     {% endfor %}
     </div>
+    <div class="bottom-ad">
+        <ins class="adsbygoogle"
+             style="display:block"
+            data-ad-client="ca-pub-7440179235836916"
+            data-ad-slot="5460281408"
+            data-ad-format="auto"
+            data-full-width-responsive="true"></ins>
+        <script>
+         (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+    </div>
+  </div>
 </div>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", function (event) {
-        var scrollpos = sessionStorage.getItem('scrollpos');
-        if (scrollpos) {
-            window.scrollTo(0, scrollpos);
-            sessionStorage.removeItem('scrollpos');
-        }
-    });
-
-    window.addEventListener("beforeunload", function (e) {
-        sessionStorage.setItem('scrollpos', window.scrollY);
-    });
-</script>
-
 
 {% include "footer.html" %}

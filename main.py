@@ -9,6 +9,7 @@ from flask_login import UserMixin, login_user, LoginManager, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 import os
+import math
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
@@ -33,13 +34,12 @@ class BlogPost(db.Model):
     __tablename__ = "blog_posts"
 
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(250), unique=True, nullable=False)
+    title = db.Column(db.String(250),  nullable=False)
     subtitle = db.Column(db.String(250), nullable=False)
     date = db.Column(db.String(250), nullable=False)
     body = db.Column(db.Text, nullable=False)
     comments = db.relationship("Comments", back_populates="parent_post")
     image = db.Column(db.String(250), nullable=False)
-    likes = db.Column(db.Integer)
     saves = db.relationship("SavedPosts", back_populates="saved_post")
     views = db.Column(db.Integer)
 
@@ -54,7 +54,6 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(100), unique=True)
     password = db.Column(db.String(100))
     name = db.Column(db.String(1000))
-    liked_posts = db.relationship("PostLikes", back_populates="user")
     comments = db.relationship("Comments", back_populates="comment_author")
     saved_posts = db.relationship("SavedPosts", back_populates='user')
     role = db.Column(db.String(100))
@@ -78,15 +77,6 @@ class Comments(db.Model):
         return f"<Comment {self.id}>"
 
 
-class PostLikes(db.Model):
-    __tablename__ = "post_likes"
-
-    id = db.Column(db.Integer, primary_key=True)
-    liked_post = db.Column(db.Integer, nullable=False)
-    user = db.relationship("User", back_populates="liked_posts")
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-
-
 class SavedPosts(db.Model):
     __tablename__ = "saved_posts"
 
@@ -97,17 +87,13 @@ class SavedPosts(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
 
 
-with app.app_context():
-    db.create_all()
-
-
 # ===================================================================
 
 
 def is_admin(func):
     @wraps(func)
     def decorator(*args, **kwargs):
-        if current_user.is_authenticated and current_user.id == 1:
+        if current_user.is_authenticated and current_user.role == 'admin':
             return func(*args, **kwargs)
         else:
             return redirect(url_for('get_all_posts'))
@@ -123,11 +109,20 @@ def about():
 # ===========Posts====================
 
 
-@app.route('/')
+@app.route('/', methods=["GET"])
 def get_all_posts():
-    posts = BlogPost.query.order_by(BlogPost.id.desc()).all()
-    popular_post = BlogPost.query.order_by(BlogPost.views.desc()).all()
-    return render_template("index.html", all_posts=posts, popular_post=popular_post)
+    per_page = 5
+    page = request.args.get('page')
+
+    if page:
+        page_1 = (int(page) * per_page) - per_page
+        posts = BlogPost.query.order_by(BlogPost.id.desc()).all()[page_1: page_1+per_page]
+    else:
+        posts = BlogPost.query.order_by(BlogPost.id.desc()).all()[0: 5]
+        page = 1
+    count = math.ceil(len(BlogPost.query.order_by(BlogPost.id.desc()).all()) / per_page)
+    popular_post = BlogPost.query.order_by(BlogPost.views.desc()).all()[0:5]
+    return render_template("index.html", all_posts=posts, popular_post=popular_post, count=count, page=int(page))
 
 
 @app.route("/post/<int:index>", methods=['GET', 'POST'])
@@ -137,13 +132,25 @@ def show_post(index):
     comment_to_edit_id = 0
     post = BlogPost.query.get(index)
     post.views = int(post.views) + 1
-    is_liked = False
     saved = False
     edit_comment = False
 
+    save = request.args.get('save')
+    unsave = request.args.get('unsave')
+
+    if request.method == "GET":
+        if save:
+            db.session.add(SavedPosts(post_id=index,
+                                      user_id=current_user.id))
+            db.session.commit()
+            return redirect(url_for('show_post', index=index))
+        elif unsave:
+            db.session.delete(SavedPosts.query.filter_by(post_id=index,
+                                                         user_id=current_user.id).first())
+            db.session.commit()
+            return redirect(url_for('show_post', index=index))
+
     if current_user.is_authenticated:
-        if len(PostLikes.query.filter_by(liked_post=index, user_id=current_user.id).all()) > 0:
-            is_liked = True
         if len(SavedPosts.query.filter_by(post_id=index, user_id=current_user.id).all()) > 0:
             saved = True
 
@@ -169,7 +176,7 @@ def show_post(index):
         return redirect(url_for('show_post', index=index))
 
     comments = Comments.query.filter_by(post_id=index).all()
-    return render_template("post.html", post=post, form=form, comments=comments, edit_form=edit_form, liked=is_liked,
+    return render_template("post.html", post=post, form=form, comments=comments, edit_form=edit_form,
                            edit_comment=edit_comment, edit_comment_id=comment_to_edit_id, saved=saved)
 
 
@@ -191,7 +198,6 @@ def new_post():
                         subtitle=subtitle,
                         body=content,
                         date=date,
-                        likes=0,
                         image=file,
                         views=0)
         db.session.add(post)
@@ -199,56 +205,6 @@ def new_post():
         return redirect(url_for('get_all_posts'))
 
     return render_template("admin/add_post.html", form=form)
-
-
-@app.route("/post/like/<int:post_id>", methods=['GET'])
-@login_required
-def like_post(post_id):
-    post = BlogPost.query.get(post_id)
-    post.likes += 1
-
-    like = PostLikes(liked_post=post_id,
-                     user_id=current_user.id)
-    db.session.add(like)
-    db.session.commit()
-
-    return redirect(url_for('show_post', index=post_id))
-
-
-@app.route("/post/unlike/<int:post_id>", methods=['GET'])
-@login_required
-def unlike_post(post_id):
-    post = BlogPost.query.get(post_id)
-    post.likes -= 1
-
-    like = PostLikes.query.filter_by(liked_post=post_id,
-                                     user_id=current_user.id).first()
-    db.session.delete(like)
-    db.session.commit()
-
-    return redirect(url_for('show_post', index=post_id))
-
-
-@app.route('/post/save/<int:post_id>', methods=['GET'])
-@login_required
-def save_post(post_id):
-    save = SavedPosts(post_id=post_id,
-                      user_id=current_user.id)
-    db.session.add(save)
-    db.session.commit()
-
-    return redirect(url_for('show_post', index=post_id))
-
-
-@app.route('/post/unsave/<int:post_id>')
-@login_required
-def unsave_post(post_id):
-    save = SavedPosts.query.filter_by(post_id=post_id,
-                                      user_id=current_user.id).first()
-    db.session.delete(save)
-    db.session.commit()
-
-    return redirect(url_for('show_post', index=post_id))
 
 
 @app.route('/admin/edit-post/<post_id>', methods=['GET', 'POST'])
@@ -275,24 +231,32 @@ def edit_post(post_id):
     return render_template("admin/add_post.html", form=form, post_id=post_id)
 
 
-@app.route("/delete/<post_id>")
+@app.route("/admin/delete/<post_id>")
+@is_admin
 @login_required
 def delete(post_id):
     post = BlogPost.query.get(post_id)
     comments = Comments.query.filter_by(post_id=post_id).all()
+    saves = SavedPosts.query.filter_by(post_id=post_id).all()
+
+    for save in saves:
+        db.session.delete(save)
+
     for comment in comments:
         db.session.delete(comment)
+
     db.session.delete(post)
     db.session.commit()
-    return redirect(url_for('get_all_posts'))
+    return redirect(url_for('admin_posts'))
 
 
 @app.route("/delete/comment/<post_id>/<comment_id>")
 @login_required
 def delete_comment(comment_id, post_id):
     comment = Comments.query.get(comment_id)
-    db.session.delete(comment)
-    db.session.commit()
+    if current_user.id == comment.author_id:
+        db.session.delete(comment)
+        db.session.commit()
     return redirect(url_for('show_post', index=post_id))
 
 
@@ -390,8 +354,21 @@ def delete_image():
 def search():
     key_word = request.args.get("search")
 
-    search_results = BlogPost.query.filter(BlogPost.title.like("%" + key_word + "%")).all()
-    return render_template('index.html', key_word=key_word, search_results=search_results, search=True)
+    per_page = 5
+    page = request.args.get('page')
+    posts = BlogPost.query.filter(BlogPost.title.like("%" + key_word + "%")).order_by(BlogPost.id.desc()).all()
+
+    if page:
+        page_1 = (int(page) * per_page) - per_page
+        search_results = posts[page_1: page_1 + per_page]
+    else:
+        search_results = posts[0: 5]
+        page = 1
+    count = math.ceil(len(posts) / per_page)
+    popular_post = BlogPost.query.order_by(BlogPost.views.desc()).all()[0:5]
+
+    return render_template('index.html', key_word=key_word, search_results=search_results, search=True, page=int(page),
+                           count=count, popular_post=popular_post)
 
 
 # ===========Admin===========
@@ -432,4 +409,4 @@ def admin_comments():
 
 
 if __name__ == "__main__":
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    app.run(debug=True)

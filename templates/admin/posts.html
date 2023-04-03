@@ -43,9 +43,11 @@
       <td>{{ post.title }}</td>
       <td>{{ post.date }}</td>
       <td>{{ post.body | safe | truncate(125, True, '...') }} <a href="{{ url_for('show_post', index=post.id) }}">Read more</a></td>
-      <td></td>
+      <td>{{ post.views }}</td>
       <td><img src="{{ url_for('static', filename='img/'+post.image) }}" style="width: 100px;"></td>
       <td><a href="{{ url_for('edit_post', post_id=post.id) }}">Edit</a></td>
+      <td><a href="{{ url_for('delete', post_id=post.id) }}">Delete</a></td>
+
 
     </tr>
   {% endfor %}
