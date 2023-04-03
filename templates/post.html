@@ -88,6 +88,8 @@
                     </div>
                   {% if comment.author_id == current_user.id %}
                   <div class="menu-nav">
+                      <span class="date sub-text" style="color: #B4B4B4; font-size: 15px">{{ comment.comment_author.name }}</span>
+
                     <div class="menu-item"></div>
                     <div class="dropdown-container" tabindex="-1">
                       <div class="three-dots"></div>
@@ -96,15 +98,14 @@
                         <a href="{{ url_for('show_post', index=post.id, edit=comment.id) }} "><div>Edit</div></a>
                       </div>
                     </div>
-                  </div>
+                    </div>
                   {% endif %}
-                    <div class="commentText" style="padding-left: 50px;">
+                    <div class="commentText" style="padding-left: 60px;">
                         {% if edit_comment and comment.id == edit_comment_id %}
                          {{ wtf.quick_form(edit_form) }}
                         {% else %}
                             <p>{{ comment.text | safe }}</p>
                         {% endif %}
-                      <p class="date sub-text" style="color: #B4B4B4; font-size: 15px">{{ comment.comment_author.name }}</p>
                     </div>
               </ul>
           {% endfor %}
