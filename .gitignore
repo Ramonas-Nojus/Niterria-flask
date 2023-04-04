@@ -4,4 +4,3 @@ venv library root/
 __pycache__/
 .idea/
 .idea/workspace.xml
-instance/blog.db
