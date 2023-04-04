@@ -12,7 +12,7 @@ import os
 import math
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = "f64170de13c84937a4b476a110f1ed4e"
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 Bootstrap(app)
 ckeditor = CKEditor(app)
 
